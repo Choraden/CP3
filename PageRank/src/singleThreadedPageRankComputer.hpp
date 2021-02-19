@@ -13,10 +13,10 @@ class SingleThreadedPageRankComputer : public PageRankComputer {
 public:
     SingleThreadedPageRankComputer() {};
 
-    std::vector<PageIdAndRank> computeForNetwork(Network const& network, double alpha, uint32_t iterations, double tolerance) const
-    {
+    std::vector<PageIdAndRank>
+    computeForNetwork(Network const &network, double alpha, uint32_t iterations, double tolerance) const {
         std::unordered_map<PageId, PageRank, PageIdHash> pageHashMap;
-        for (auto const& page : network.getPages()) {
+        for (auto const &page : network.getPages()) {
             page.generateId(network.getGenerator());
             pageHashMap[page.getId()] = 1.0 / network.getSize();
         }
@@ -50,7 +50,7 @@ public:
             dangleSum = dangleSum * alpha;
 
             double difference = 0;
-            for (auto& pageMapElem : pageHashMap) {
+            for (auto &pageMapElem : pageHashMap) {
                 PageId pageId = pageMapElem.first;
 
                 double danglingWeight = 1.0 / network.getSize();
@@ -64,14 +64,16 @@ public:
                 difference += std::abs(previousPageHashMap[pageId] - pageHashMap[pageId]);
             }
 
-            std::vector<PageIdAndRank> result;
-            for (auto iter : pageHashMap) {
-                result.push_back(PageIdAndRank(iter.first, iter.second));
-            }
-
-            ASSERT(result.size() == network.getSize(), "Invalid result size=" << result.size() << ", for network" << network);
 
             if (difference < tolerance) {
+                std::vector<PageIdAndRank> result;
+                for (auto iter : pageHashMap) {
+                    result.push_back(PageIdAndRank(iter.first, iter.second));
+                }
+
+                ASSERT(result.size() == network.getSize(),
+                       "Invalid result size=" << result.size() << ", for network" << network);
+
                 return result;
             }
         }
@@ -79,8 +81,7 @@ public:
         ASSERT(false, "Not able to find result in iterations=" << iterations);
     }
 
-    std::string getName() const
-    {
+    std::string getName() const {
         return "SingleThreadedPageRankComputer";
     }
 };
