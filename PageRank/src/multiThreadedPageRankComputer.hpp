@@ -31,13 +31,17 @@ public:
         std::unordered_map<PageId, std::vector<PageId>, PageIdHash> edges;
 
         for (uint32_t j = 0; j < numThreads; j++) {
-            t[j] = std::thread{generatePagesInfo, std::ref(network),
-                               j, numThreads, std::ref(mut),
-                               std::ref(pageHashMap), std::ref(numLinks),
-                               std::ref(danglingNodes), std::ref(nodes)};
+            t[j] = std::thread{generateId, std::ref(network), j, numThreads};
         }
         joinThreads(t);
+
         for (auto const &page : network.getPages()) {
+            pageHashMap[page.getId()] = 1.0 / network.getSize();
+            numLinks[page.getId()] = page.getLinks().size();
+            if (page.getLinks().size() == 0) {
+                danglingNodes.push_back(page.getId());
+            }
+            nodes.push_back(page.getId());
             for (auto link : page.getLinks()) {
                 edges[link].push_back(page.getId());
             }
@@ -89,34 +93,12 @@ private:
         }
     }
 
-    static void generatePagesInfo(Network const &network, uint32_t i, uint32_t numThreads,
-                                  std::mutex &mut,
-                                  std::unordered_map<PageId, PageRank, PageIdHash> &pageHashMap,
-                                  std::unordered_map<PageId, uint32_t, PageIdHash> &numLinks,
-                                  std::vector<PageId> &danglingNodes,
-                                  std::vector<PageId> &nodes) {
+    static void generateId(Network const &network, uint32_t i, uint32_t numThreads) {
         const std::vector<Page> &page = network.getPages();
-        std::vector<PageId> pageId;
-        std::vector<uint32_t> linkNum;
-
         while (i < page.size()) {
             page[i].generateId(network.getGenerator());
-            pageId.push_back(page[i].getId());
-            linkNum.push_back(page[i].getLinks().size());
             i += numThreads;
         }
-
-        mut.lock();
-        for (i = 0; i < pageId.size(); i++) {
-            pageHashMap[pageId[i]] = 1.0 / network.getSize();
-            numLinks[pageId[i]] = linkNum[i];
-
-            if (linkNum[i] == 0) {
-                danglingNodes.push_back(pageId[i]);
-            }
-            nodes.push_back(pageId[i]);
-        }
-        mut.unlock();
     }
 
     static void rankPages(const std::vector<PageId> &nodes, const std::vector<PageId> &danglingNodes,
