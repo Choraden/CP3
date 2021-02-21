@@ -73,7 +73,6 @@ public:
 
                 ASSERT(result.size() == network.getSize(),
                        "Invalid result size=" << result.size() << ", for network" << network);
-
                 return result;
             }
         }
