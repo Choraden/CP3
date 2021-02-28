@@ -15,7 +15,7 @@ class Sha256IdGenerator : public IdGenerator {
 public:
     virtual PageId generateId(std::string const &content) const {
         FILE* fp;
-        const int sizebuf = 100;
+        const int sizebuf = 128;
         char buff[sizebuf];
         std::string cmd = "printf \"" + content + "\" | sha256sum";
         fp = popen(cmd.c_str(), "r");
